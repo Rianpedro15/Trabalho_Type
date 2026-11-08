@@ -8,7 +8,7 @@ export const tarefas: Tarefa[] = [
     { 
         id: 1, 
         titulo: "evento 1", 
-        prioridade: "longo prazo", 
+        prioridade: "longo_prazo", 
         status: "aberto",
         tags: ["estudo", "ts"], 
         criadaEm: new Date() 
@@ -25,7 +25,7 @@ export const tarefas: Tarefa[] = [
         id: 3, 
         titulo: "Evento 3", 
         descricao: "PR #42", 
-        prioridade: "longo prazo",
+        prioridade: "longo_prazo",
         status: "lotado", 
         tags: ["trabalho"], 
         criadaEm: new Date() 
@@ -33,7 +33,7 @@ export const tarefas: Tarefa[] = [
     { 
         id: 4, 
         titulo: "Evento 4", 
-        prioridade: "medio prazo", 
+        prioridade: "medio_prazo", 
         status: "aberto",
         tags: ["estudo", "ts"], 
         criadaEm: new Date() 
@@ -41,7 +41,7 @@ export const tarefas: Tarefa[] = [
     { 
         id: 5, 
         titulo: "Evento 5", 
-        prioridade: "medio prazo", 
+        prioridade: "medio_prazo", 
         status: "aberto",
         tags: ["saude"], 
         criadaEm: new Date() 
