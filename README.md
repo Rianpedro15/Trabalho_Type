@@ -3,6 +3,7 @@
 
 30/10 - AMANDA ATUALIZOU O CODIGO
 
+<<<<<<< HEAD
 
 
 ## Como rodar (Aula 3: site + API + MySQL)
@@ -15,3 +16,5 @@
 6. Conferir tipos: `npm run verificar` (nas duas pastas)
 
 Nota: a API do TaskFlow do professor e a nossa usam a porta 3000. Rode uma de cada vez.
+=======
+>>>>>>> ec57773e52ea5cf5cb1121f85a549c9d31aaa5a7

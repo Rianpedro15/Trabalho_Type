@@ -1,3 +1,7 @@
 node_modules/
+<<<<<<< HEAD
 dist
 .env
+=======
+
+>>>>>>> ec57773e52ea5cf5cb1121f85a549c9d31aaa5a7
