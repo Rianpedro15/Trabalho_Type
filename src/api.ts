@@ -8,7 +8,7 @@ export async function listarTarefas(): Promise<Tarefa[]> {
     try {
         resposta = await fetch("/api/tarefas");
     } catch {
-        throw new Error("Não foi possível conectar à API. Ela está rodando? (npm run api)");
+        throw new Error("Não foi possível conectar à API. Ela está rodando? (npm run dev na pasta api)");
     }
     if (!resposta.ok) {
         throw new Error("Não foi possível carregar os eventos. A API está rodando?");

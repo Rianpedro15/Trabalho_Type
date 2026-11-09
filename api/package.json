@@ -1,0 +1,22 @@
+{
+  "name": "eventos-facul-api",
+  "version": "1.0.0",
+  "description": "API do EVENTOS FACUL (Express + MySQL)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/servidor.ts",
+    "verificar": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^7.0.2"
+  }
+}
