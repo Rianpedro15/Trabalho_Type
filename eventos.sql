@@ -91,12 +91,12 @@ INSERT INTO usuarios (nome, email, senha_hash) VALUES
   ('Aluno Teste',   'aluno@eventosfacul.dev', '$2b$10$X46TZdkKX8P2NZNov1SoaOmtQ5JmGB.x/nK1IWAMCrYuZ1/TBFGcS');
 
 INSERT INTO eventos (usuario_id, titulo, descricao, prioridade, status, data_evento, encerrada_em) VALUES
-  (1, 'Evento 1', NULL,     'longo_prazo', 'aberto',    NULL, NULL),
-  (1, 'Evento 2', NULL,     'curto_prazo', 'encerrado', NULL, NOW()),
-  (1, 'Evento 3', 'PR #42', 'longo_prazo', 'lotado',    NULL, NULL),
-  (1, 'Evento 4', NULL,     'medio_prazo', 'aberto',    NULL, NULL),
-  (1, 'Evento 5', NULL,     'medio_prazo', 'aberto',    NULL, NULL),
-  (1, 'Evento 6', NULL,     'curto_prazo', 'aberto',    NULL, NULL);
+  (1, 'Semana de Recepção dos Calouros', NULL,     'longo_prazo', 'aberto',    NULL, NULL),
+  (1, 'Feira de Profissões e Carreiras', NULL,     'curto_prazo', 'encerrado', NULL, NOW()),
+  (1, 'Congresso de Iniciação Científica', 'PR #42', 'longo_prazo', 'lotado',    NULL, NULL),
+  (1, 'Hackathon Universitário de Tecnologia', NULL,     'medio_prazo', 'aberto',    NULL, NULL),
+  (1, 'Jogos Interatléticas da Faculdade', NULL,     'medio_prazo', 'aberto',    NULL, NULL),
+  (1, 'Cerimônia de Formatura e Colação de Grau', NULL,     'curto_prazo', 'aberto',    NULL, NULL);
 
 INSERT INTO tags (usuario_id, nome) VALUES
   (1, 'estudo'), (1, 'ts'), (1, 'casa'), (1, 'trabalho'), (1, 'saude');
