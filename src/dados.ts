@@ -1,5 +1,5 @@
 
-// TABBELA DOS BANCO DE DADOS, CRIA AS PRIMEIRAS TAREFAS DO SITE
+// TABELA DOS BANCO DE DADOS, CRIA AS PRIMEIRAS TAREFAS DO SITE
 
 
 import type { Tarefa } from "./tipos";
@@ -7,7 +7,7 @@ import type { Tarefa } from "./tipos";
 export const tarefas: Tarefa[] = [
     { 
         id: 1, 
-        titulo: "evento 1", 
+        titulo: "Evento 1", 
 <<<<<<< HEAD
         prioridade: "longo_prazo", 
 =======
