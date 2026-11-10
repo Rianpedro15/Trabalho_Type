@@ -7,7 +7,7 @@ import type { Tarefa } from "./tipos";
 export const tarefas: Tarefa[] = [
     { 
         id: 1, 
-        titulo: "Evento 1", 
+        titulo: "Semana de Recepção dos Calouros",
 <<<<<<< HEAD
         prioridade: "longo_prazo", 
 =======
@@ -19,7 +19,7 @@ export const tarefas: Tarefa[] = [
     },
     { 
         id: 2, 
-        titulo: "Evento 2", 
+        titulo: "Feira de Profissões e Carreiras",
         prioridade: "curto_prazo", 
         status: "encerrado",
         tags: ["casa"], 
@@ -27,7 +27,7 @@ export const tarefas: Tarefa[] = [
     },
     { 
         id: 3, 
-        titulo: "Evento 3", 
+        titulo: "Congresso de Iniciação Científica",
         descricao: "PR #42", 
 <<<<<<< HEAD
         prioridade: "longo_prazo",
@@ -40,7 +40,7 @@ export const tarefas: Tarefa[] = [
     },
     { 
         id: 4, 
-        titulo: "Evento 4", 
+        titulo: "Hackathon Universitário de Tecnologia",
 <<<<<<< HEAD
         prioridade: "medio_prazo", 
 =======
@@ -52,7 +52,7 @@ export const tarefas: Tarefa[] = [
     },
     { 
         id: 5, 
-        titulo: "Evento 5", 
+        titulo: "Jogos Interatléticas da Faculdade",
 <<<<<<< HEAD
         prioridade: "medio_prazo", 
 =======
@@ -64,7 +64,7 @@ export const tarefas: Tarefa[] = [
     },
     { 
         id: 6, 
-        titulo: "Evento 6", 
+        titulo: "Cerimônia de Formatura e Colação de Grau",
         prioridade: "curto_prazo", 
         status: "aberto",
         tags: ["casa"], 
