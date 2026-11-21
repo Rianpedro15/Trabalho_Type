@@ -18,3 +18,8 @@ export interface Tarefa {
 // O que o usuário informa ao cadastrar:
 // id, status e criadaEm são responsabilidade do sistema
 export type NovaTarefa = Omit<Tarefa, "id" | "status" | "criadaEm">;
+// NOVO (Aula 5): quem está logado. A API devolve isto no login.
+export interface Sessao {
+    token: string;
+    nome: string;
+}

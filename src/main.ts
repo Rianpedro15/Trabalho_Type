@@ -1,7 +1,7 @@
 
 import { elemento, campo, selecao } from "./dom"; // importa os campos criados no DOM
 
-import { buscarTarefa, listarTarefas } from "./api"; // conversa com a API (que busca no MySQL)
+import { buscarTarefa, criarConta, encerrarSessao, entrar, guardarSessao, listarTarefas, sessaoAtual } from "./api"; // conversa com a API (que busca no MySQL)
 
 import type { Prioridade, Tarefa } from "./tipos"; // importa o tipo da tarefa
 
@@ -87,13 +87,74 @@ async function mostrarTarefa(id: number): Promise<void> {
     }
 }
 
-// Inicializa o sistema buscando os dados da API
+// ---------- A tela de entrada (Aula 5) ----------
+function mostrarErroEntrada(erro: unknown): void {
+    const mensagem = erro instanceof Error ? erro.message : "Erro inesperado.";
+    elemento("erro-entrada").textContent = mensagem;
+}
+
+// Troca entre "Entrar" e "Criar conta"
+function mostrarFormulario(criando: boolean): void {
+    elemento("form-criar").hidden = !criando;
+    elemento("form-entrar").hidden = criando;
+    elemento("alternar-entrada").textContent = criando
+        ? "Já tenho conta"
+        : "Ainda não tenho conta";
+    elemento("erro-entrada").textContent = "";
+}
+
+elemento("alternar-entrada").addEventListener("click", () => {
+    mostrarFormulario(elemento("form-criar").hidden === true); // escondido? então mostra
+});
+
+elemento("form-entrar").addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    try {
+        guardarSessao(await entrar(campo("entrar-email").value, campo("entrar-senha").value));
+        campo("entrar-senha").value = "";
+        await iniciar();
+    } catch (erro) {
+        mostrarErroEntrada(erro);
+    }
+});
+
+elemento("form-criar").addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    const email = campo("criar-email").value;
+    const senha = campo("criar-senha").value;
+    try {
+        await criarConta(campo("criar-nome").value, email, senha);
+        guardarSessao(await entrar(email, senha)); // criou? já entra direto
+        (elemento("form-criar") as HTMLFormElement).reset(); // não deixa a senha no campo
+        await iniciar();
+    } catch (erro) {
+        mostrarErroEntrada(erro);
+    }
+});
+
+elemento("botao-sair").addEventListener("click", () => {
+    encerrarSessao();
+    lista = [];
+    (elemento("form-entrar") as HTMLFormElement).reset();
+    mostrarFormulario(false); // volta sempre para "Entrar"
+    void iniciar();
+});
+
+// ---------- O começo: com sessão, mostra o sistema; sem, a entrada ----------
 async function iniciar(): Promise<void> {
+    const sessao = sessaoAtual();
+    elemento("tela-entrada").hidden = sessao !== undefined;
+    elemento("tela-app").hidden = sessao === undefined;
+    elemento("botao-sair").hidden = sessao === undefined;
+    elemento("usuario-nome").textContent = sessao?.nome ?? "";
+    if (!sessao) {
+        return;
+    }
+    elemento("erro-entrada").textContent = "";
     try {
         lista = await listarTarefas();
         desenhar();
         await mostrarTarefa(3);
-
     } catch (erro) {
         if (erro instanceof Error) {
             elemento("erro").textContent = erro.message;
@@ -101,4 +162,4 @@ async function iniciar(): Promise<void> {
     }
 }
 
-iniciar();
+void iniciar();

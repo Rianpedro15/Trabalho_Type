@@ -9,14 +9,55 @@
 </head>
 
 <body>
-  <header class="cabecalho">
+   <header class="cabecalho">
 
     <div>
       <h1 class="cabecalho__titulo"><span id="nome-do-sistema">—</span></h1>
       <p class="cabecalho__subtitulo"><span id="versao">—</span> · <span id="data-de-hoje">—</span></p>
     </div>
+
+    <div class="cabecalho__acoes">
+      <span id="usuario-nome"></span>
+      <button id="botao-sair" class="botao botao--pequeno" type="button">Sair</button>
+    </div>
   </header>
-  <main>
+    <section id="tela-entrada" class="entrada">
+    <form class="formulario" id="form-entrar">
+      <h2>Entrar</h2>
+      <div class="campo">
+        <label class="campo__rotulo" for="entrar-email">E-mail</label>
+        <input class="campo__entrada" id="entrar-email" type="email" />
+      </div>
+      <div class="campo">
+        <label class="campo__rotulo" for="entrar-senha">Senha</label>
+        <input class="campo__entrada" id="entrar-senha" type="password" />
+      </div>
+      <button class="botao botao--primario" type="submit">Entrar</button>
+    </form>
+
+    <form class="formulario" id="form-criar" hidden>
+      <h2>Criar conta</h2>
+      <div class="campo">
+        <label class="campo__rotulo" for="criar-nome">Nome</label>
+        <input class="campo__entrada" id="criar-nome" type="text" />
+      </div>
+      <div class="campo">
+        <label class="campo__rotulo" for="criar-email">E-mail</label>
+        <input class="campo__entrada" id="criar-email" type="email" />
+      </div>
+      <div class="campo">
+        <label class="campo__rotulo" for="criar-senha">Senha (6 caracteres ou mais)</label>
+        <input class="campo__entrada" id="criar-senha" type="password" />
+      </div>
+      <button class="botao botao--primario" type="submit">Criar conta</button>
+    </form>
+
+    <button class="botao botao--pequeno" id="alternar-entrada" type="button">
+      Ainda não tenho conta
+    </button>
+    <p class="campo__erro" id="erro-entrada" role="alert"></p>
+  </section>
+   <main id="tela-app" hidden>
 
     <form class="formulario" id="formulario">
       <div class="campo">
