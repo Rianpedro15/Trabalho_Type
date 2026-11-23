@@ -1,11 +1,12 @@
 
 import { elemento, campo, selecao } from "./dom"; // importa os campos criados no DOM
 
-import { buscarTarefa, criarConta, encerrarSessao, entrar, guardarSessao, listarTarefas, sessaoAtual } from "./api"; // conversa com a API (que busca no MySQL)
+import { buscarEstatisticas, buscarTarefa, criarConta, criarTarefa, encerrarSessao, entrar, guardarSessao, listarTarefas, sessaoAtual } from "./api"; // conversa com a API (que busca no MySQL)
 
-import type { Prioridade, Tarefa } from "./tipos"; // importa o tipo da tarefa
+import type { Prioridade, Status, Tarefa } from "./tipos"; // importa o tipo da tarefa
 
-import { adicionarTarefa } from "./servicos"; // o usuário adiciona uma nova tarefa
+// as consultas que rodam no navegador (Aula 6)
+import { existeAltaPendente, filtrarPorStatus, ordenarPorPrioridade, pesquisarPorTitulo, todasConcluidas } from "./servicos";
 
 elemento("nome-do-sistema").textContent = "EVENTOS FACUL";
 elemento("versao").textContent = "v0.3.0";
@@ -13,6 +14,10 @@ elemento("data-de-hoje").textContent = new Date().toLocaleDateString("pt-BR");
 
 // Começa vazia: quem preenche é a API
 let lista: Tarefa[] = [];
+
+// Aula 6: o filtro e a busca mudam o que é MOSTRADO, nunca a lista que existe
+let statusSelecionado: Status | "todos" = "todos";
+let termoDeBusca = "";
 
 // Uma tarefa vira um <li> pronto para a tela
 function criarItem(tarefa: Tarefa): HTMLLIElement {
@@ -44,35 +49,90 @@ function criarItem(tarefa: Tarefa): HTMLLIElement {
     return item;
 }
 
+// Quais eventos mostrar: filtrar, pesquisar, ordenar.
+// O filtro muda o que é MOSTRADO, nunca a lista que existe.
+function tarefasVisiveis(): Tarefa[] {
+    let resultado = lista;
+    if (statusSelecionado !== "todos") {
+        resultado = filtrarPorStatus(resultado, statusSelecionado);
+    }
+    if (termoDeBusca.trim() !== "") {
+        resultado = pesquisarPorTitulo(resultado, termoDeBusca);
+    }
+    return ordenarPorPrioridade(resultado);
+}
+
+// O painel vem pronto do banco (GROUP BY)
+async function atualizarPainel(): Promise<void> {
+    const contagem = await buscarEstatisticas();
+    const total = contagem.aberto + contagem.lotado + contagem.encerrado;
+    elemento("total").textContent = String(total);
+    elemento("abertos").textContent = String(contagem.aberto);
+    elemento("lotados").textContent = String(contagem.lotado);
+    elemento("encerrados").textContent = String(contagem.encerrado);
+}
+
 // Desenha a tela inteira a partir da lista
 function desenhar(): void {
-    elemento("lista").replaceChildren(...lista.map(criarItem));
+    const visiveis = tarefasVisiveis();
+    elemento("lista").replaceChildren(...visiveis.map(criarItem));
+    elemento("vazio").hidden = visiveis.length > 0;
 
-    const abertos = lista.filter((t) => t.status === "aberto");
+    // some: existe pelo menos um evento de longo prazo ainda aberto?
+    elemento("aviso-urgente").classList.toggle("aviso--oculto", !existeAltaPendente(lista));
 
-    elemento("total").textContent = String(lista.length);
-    elemento("abertos").textContent = String(abertos.length);
+    // every: todos encerrados?
+    if (todasConcluidas(lista)) {
+        console.log("Parabéns: nenhum evento em aberto!");
+    }
+    atualizarPainel().catch(mostrarErro);
+}
+
+// Os botões de filtro: um só "ouvinte" para o grupo inteiro
+elemento("filtros-status").addEventListener("click", (evento) => {
+    const alvo = evento.target;
+    if (!(alvo instanceof HTMLButtonElement)) return;
+    const escolhido = alvo.dataset.status;
+    if (!escolhido) return;
+
+    statusSelecionado = escolhido as Status | "todos";
+    for (const b of elemento("filtros-status").querySelectorAll("button")) {
+        b.classList.toggle("filtro--ativo", b === alvo);
+    }
+    desenhar();
+});
+
+// A busca filtra enquanto o usuário digita
+campo("busca").addEventListener("input", () => {
+    termoDeBusca = campo("busca").value;
+    desenhar();
+});
+
+function mostrarErro(erro: unknown): void {
+    if (erro instanceof Error) {
+        elemento("erro").textContent = erro.message;
+    }
 }
 
 // Formulário de cadastro
-elemento("formulario").addEventListener("submit", (evento) => {
+elemento("formulario").addEventListener("submit", async (evento) => {
     evento.preventDefault();
     elemento("erro").textContent = "";
 
     try {
-        adicionarTarefa(lista, {
+        // o evento é gravado no banco, no nome de quem está logado
+        const nova = await criarTarefa({
             titulo: campo("titulo").value.trim(),
             prioridade: selecao("prioridade").value as Prioridade,
             tags: [],
         });
+        lista.push(nova);
 
         campo("titulo").value = "";
         desenhar();
 
     } catch (erro) {
-        if (erro instanceof Error) {
-            elemento("erro").textContent = erro.message;
-        }
+        mostrarErro(erro);
     }
 });
 
@@ -156,9 +216,7 @@ async function iniciar(): Promise<void> {
         desenhar();
         await mostrarTarefa(3);
     } catch (erro) {
-        if (erro instanceof Error) {
-            elemento("erro").textContent = erro.message;
-        }
+        mostrarErro(erro);
     }
 }
 

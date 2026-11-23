@@ -1,6 +1,6 @@
 // TODAS AS CONVERSAS COM A API FICAM AQUI
 
-import type { Sessao, Tarefa } from "./tipos";
+import type { Contagem, NovaTarefa, Sessao, Tarefa } from "./tipos";
 const CHAVE_SESSAO = "taskflow:sessao";
 
 // ---------- A sessão: o "crachá" guardado no navegador ----------
@@ -79,6 +79,19 @@ export async function buscarTarefa(id: number): Promise<Tarefa | undefined> {
         throw erro;
     }
 }
+// Cadastra um evento no banco (o dono é quem está logado: vem do token)
+export async function criarTarefa(dados: NovaTarefa): Promise<Tarefa> {
+    const resposta = await enviar("POST", "/api/tarefas", dados);
+    const bruto = (await resposta.json()) as Tarefa;
+    return { ...bruto, criadaEm: new Date(bruto.criadaEm) };
+}
+
+// NOVO (Aula 6): os números do painel, calculados pelo banco com GROUP BY
+export async function buscarEstatisticas(): Promise<Contagem> {
+    const resposta = await enviar("GET", "/api/estatisticas");
+    return (await resposta.json()) as Contagem;
+}
+
 // ---------- Usuários (Aula 5) ----------
 export async function entrar(email: string, senha: string): Promise<Sessao> {
     const resposta = await enviar("POST", "/api/login", { email, senha });

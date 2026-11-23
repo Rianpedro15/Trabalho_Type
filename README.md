@@ -1,20 +1,47 @@
-# type
+# EVENTOS FACUL
 
+Gerenciador de eventos da faculdade, com cadastro, login e banco de dados MySQL.
+Projeto da disciplina — Grupo Anchieta, 2026. Grupo: ______________ (integrantes).
 
-30/10 - AMANDA ATUALIZOU O CODIGO
+## Como rodar
 
-<<<<<<< HEAD
+1. Crie o banco: rode `eventos.sql` inteiro no MySQL Workbench.
+2. Na pasta `api`, copie `.env.exemplo` para `.env` e preencha `DB_SENHA` (senha do MySQL) e `JWT_SEGREDO`.
+3. Na pasta `api`: `npm install` e depois `npm run dev` (porta 3000).
+4. Em outro terminal, na pasta do projeto: `npm install` e depois `npm run dev`.
+5. Abra http://localhost:5173 e entre com o usuário de demonstração:
+   `admin@eventosfacul.dev` / `senha123` (ou `aluno@eventosfacul.dev` / `senha123`).
 
-
-## Como rodar (Aula 3: site + API + MySQL)
-
-1. No MySQL Workbench, rode o `eventos.sql` inteiro (raio). Isso cria o banco `eventos_facul`.
-2. Na pasta `api`, copie `.env.exemplo` para `.env` e preencha `DB_SENHA` com a senha do SEU MySQL.
-3. Terminal 1, na pasta `api` (porta 3000): `npm install` e depois `npm run dev`
-4. Terminal 2, na pasta do site (porta 5173): `npm install` e depois `npm run dev`. Abra http://localhost:5173
-5. Teste a API: http://localhost:3000/api/tarefas e http://localhost:3000/api/tarefas/3
-6. Conferir tipos: `npm run verificar` (nas duas pastas)
+Conferir os tipos: `npm run verificar` (nas duas pastas).
 
 Nota: a API do TaskFlow do professor e a nossa usam a porta 3000. Rode uma de cada vez.
-=======
->>>>>>> ec57773e52ea5cf5cb1121f85a549c9d31aaa5a7
+
+## Estrutura
+
+- `src/` — a página (TypeScript + Vite)
+- `api/src/` — a API (Express + mysql2), com login (bcrypt + JWT)
+- `eventos.sql` — o script do banco de dados (tabelas, dados de exemplo e consultas)
+- `css/` — a aparência da página
+
+## O que o sistema faz
+
+- Cadastro, login e saída: cada pessoa vê e altera só os próprios eventos.
+- Lista de eventos com tags, ordenada por prioridade (longo prazo no topo).
+- Filtro por status (abertos, lotados, encerrados) e busca por título.
+- Painel com quatro números calculados pelo banco (`GET /api/estatisticas`, com `GROUP BY`).
+- Aviso amarelo quando existe evento de longo prazo ainda aberto.
+
+## Rotas da API
+
+| Rota | O que faz |
+| --- | --- |
+| `POST /api/usuarios` | cria uma conta |
+| `POST /api/login` | devolve o token (válido por 8 h) |
+| `GET /api/tarefas?status=&busca=` | lista os eventos de quem está logado |
+| `GET /api/tarefas/:id` | um evento (404 se não for seu) |
+| `POST /api/tarefas` | cadastra um evento |
+| `PATCH /api/tarefas/:id` | altera título, prioridade ou status |
+| `DELETE /api/tarefas/:id` | remove um evento |
+| `GET /api/estatisticas` | totais por status |
+
+Todas, exceto cadastro e login, exigem `Authorization: Bearer <token>`.

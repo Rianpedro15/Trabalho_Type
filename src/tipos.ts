@@ -23,3 +23,6 @@ export interface Sessao {
     token: string;
     nome: string;
 }
+
+// NOVO (Aula 6): os números do painel. Record garante que as três chaves existam.
+export type Contagem = Record<Status, number>;
