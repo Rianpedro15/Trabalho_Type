@@ -1,7 +1,7 @@
 
 import { elemento, campo, selecao } from "./dom"; // importa os campos criados no DOM
 
-import { alternarFavorito, buscarEstatisticas, buscarTarefa, criarConta, criarTarefa, encerrarSessao, entrar, guardarSessao, listarTarefas, sessaoAtual } from "./api"; // conversa com a API (que busca no MySQL)
+import { alterarStatus, alternarFavorito, buscarEstatisticas, buscarTarefa, criarConta, criarTarefa, removerTarefa, encerrarSessao, entrar, guardarSessao, listarTarefas, sessaoAtual } from "./api"; // conversa com a API (que busca no MySQL)
 
 import type { Prioridade, Status, Tarefa } from "./tipos"; // importa o tipo da tarefa
 
@@ -19,10 +19,26 @@ let lista: Tarefa[] = [];
 let statusSelecionado: Status | "todos" = "todos";
 let termoDeBusca = "";
 
+// Uma ajudante para criar botões sem repetir código
+function botao(texto: string, extra: string, aoClicar: () => void): HTMLButtonElement {
+    const elementoBotao = document.createElement("button");
+    elementoBotao.type = "button";
+    elementoBotao.className = `botao botao--pequeno ${extra}`;
+    elementoBotao.textContent = texto;
+    elementoBotao.addEventListener("click", aoClicar); // callback, de novo
+    return elementoBotao;
+}
+
 // Uma tarefa vira um <li> pronto para a tela
 function criarItem(tarefa: Tarefa): HTMLLIElement {
     const item = document.createElement("li");
     item.className = `tarefa tarefa--${tarefa.prioridade}`;
+    if (tarefa.status === "encerrado") {
+        item.classList.add("tarefa--concluida");
+    }
+
+    const principal = document.createElement("div");
+    principal.className = "tarefa__principal";
 
     const titulo = document.createElement("h3");
     titulo.className = "tarefa__titulo";
@@ -35,6 +51,10 @@ function criarItem(tarefa: Tarefa): HTMLLIElement {
     etiqueta.className = `etiqueta etiqueta--${tarefa.prioridade}`;
     etiqueta.textContent = tarefa.prioridade;
 
+    const situacao = document.createElement("span");
+    situacao.className = "etiqueta etiqueta--status";
+    situacao.textContent = tarefa.status;
+
     // Cada tag vira um <span>
     const tags = tarefa.tags.map((tag) => {
         const elementoTag = document.createElement("span");
@@ -43,7 +63,8 @@ function criarItem(tarefa: Tarefa): HTMLLIElement {
         return elementoTag;
     });
 
-    meta.append(etiqueta, ...tags);
+    meta.append(etiqueta, situacao, ...tags);
+    principal.append(titulo, meta);
 
     // O coração: favorita e desfavorita (grava no banco)
     const favorito = document.createElement("button");
@@ -72,9 +93,44 @@ function criarItem(tarefa: Tarefa): HTMLLIElement {
         }
     });
 
-    item.append(titulo, meta, favorito);
+    // Os botões: cada um fecha sobre a SUA tarefa
+    const acoes = document.createElement("div");
+    acoes.className = "tarefa__acoes";
+    acoes.append(favorito);
+    if (tarefa.status !== "encerrado") {
+        acoes.append(
+            botao("Lotado", "", () => mudarStatus(tarefa.id, "lotado")),
+            botao("Encerrar", "botao--sucesso", () => mudarStatus(tarefa.id, "encerrado"))
+        );
+    } else {
+        acoes.append(botao("Reabrir", "", () => mudarStatus(tarefa.id, "aberto")));
+    }
+    acoes.append(botao("Remover", "botao--perigo", () => remover(tarefa.id)));
 
+    item.append(principal, acoes);
     return item;
+}
+
+// O par que você vai repetir a noite toda:
+// 1. o banco confirma  2. o estado muda sem ser alterado  3. a tela acompanha
+async function mudarStatus(id: number, status: Status): Promise<void> {
+    try {
+        await alterarStatus(id, status);
+        lista = lista.map((t) => (t.id === id ? { ...t, status } : t));
+        desenhar();
+    } catch (erro) {
+        mostrarErro(erro);
+    }
+}
+
+async function remover(id: number): Promise<void> {
+    try {
+        await removerTarefa(id);
+        lista = lista.filter((t) => t.id !== id);
+        desenhar();
+    } catch (erro) {
+        mostrarErro(erro);
+    }
 }
 
 // Quais eventos mostrar: filtrar, pesquisar, ordenar.
@@ -154,7 +210,7 @@ elemento("formulario").addEventListener("submit", async (evento) => {
             prioridade: selecao("prioridade").value as Prioridade,
             tags: [],
         });
-        lista.push(nova);
+        lista = [...lista, nova]; // acrescentar sem alterar: uma lista nova
 
         campo("titulo").value = "";
         desenhar();

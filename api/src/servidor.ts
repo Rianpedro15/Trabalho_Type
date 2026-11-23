@@ -2,21 +2,28 @@
 
 import "dotenv/config"; // primeira linha: carrega o .env antes de tudo
 import bcrypt from "bcryptjs";
-import express from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { exigirLogin, SEGREDO, usuarioDe } from "./autenticacao";
 import { banco } from "./banco";
+import { PRIORIDADES, STATUS, type DadosTarefa, type Prioridade, type Status } from "./tipos";
 
 const app = express();
 app.use(express.json());
 
 // Aula 5: cada usuário vê só os SEUS eventos (WHERE usuario_id = ?)
 
-const STATUS = ["aberto", "lotado", "encerrado"] as const;
-type Status = (typeof STATUS)[number];
-const PRIORIDADES = ["curto_prazo", "medio_prazo", "longo_prazo"] as const;
-type Prioridade = (typeof PRIORIDADES)[number];
+// Devolve a mensagem de erro, ou undefined se estiver tudo certo
+function validar(dados: DadosTarefa): string | undefined {
+    if (typeof dados.titulo !== "string" || dados.titulo.trim().length < 3) {
+        return "O título precisa ter pelo menos 3 caracteres.";
+    }
+    if (dados.prioridade !== undefined && !PRIORIDADES.includes(dados.prioridade)) {
+        return "Prioridade inválida.";
+    }
+    return undefined;
+}
 
 // Aula 6: o SELECT que todas as rotas usam. Os "AS" trocam o nome da coluna
 // do jeito do banco (criada_em) para o jeito do TypeScript (criadaEm).
@@ -52,7 +59,7 @@ app.get("/api/tarefas", exigirLogin, async (req, res) => {
     const valores: (string | number)[] = [usuarioDe(res)];
 
     const { status, busca } = req.query;
-    if (typeof status === "string" && (STATUS as readonly string[]).includes(status)) {
+    if (typeof status === "string" && STATUS.includes(status as Status)) {
         sql += " AND e.status = ?"; // o filter, no banco
         valores.push(status);
     }
@@ -95,25 +102,17 @@ app.get("/api/tarefas/:id", exigirLogin, async (req, res) => {
 
 // Cadastra um evento: o dono vem do token, nunca do corpo do pedido
 app.post("/api/tarefas", exigirLogin, async (req, res) => {
-    const { titulo, descricao, prioridade, dataEvento, tags } = req.body as {
-        titulo?: string;
-        descricao?: string | null;
-        prioridade?: Prioridade;
-        dataEvento?: string | null;
-        tags?: string[];
-    };
-    if (!titulo || titulo.trim().length < 3) {
-        res.status(400).json({ erro: "O título precisa ter pelo menos 3 caracteres." });
+    const dados = req.body as DadosTarefa;
+    const problema = validar(dados);
+    if (problema) {
+        res.status(400).json({ erro: problema }); // 400: o pedido veio errado
         return;
     }
-    if (prioridade !== undefined && !(PRIORIDADES as readonly string[]).includes(prioridade)) {
-        res.status(400).json({ erro: "Prioridade inválida." });
-        return;
-    }
+    const { titulo, descricao, prioridade, dataEvento, tags } = dados;
     const usuarioId = usuarioDe(res);
     const [resultado] = await banco.execute<ResultSetHeader>(
         "INSERT INTO eventos (usuario_id, titulo, descricao, prioridade, data_evento) VALUES (?, ?, ?, ?, ?)",
-        [usuarioId, titulo.trim(), descricao ?? null, prioridade ?? "medio_prazo", dataEvento ?? null]
+        [usuarioId, titulo!.trim(), descricao ?? null, prioridade ?? "medio_prazo", dataEvento ?? null]
     );
     // as tags (se vierem) são gravadas pelo nome, só nas tags deste usuário
     for (const nome of new Set((tags ?? []).map((t) => t.trim()).filter((t) => t !== ""))) {
@@ -149,7 +148,7 @@ app.patch("/api/tarefas/:id", exigirLogin, async (req, res) => {
         valores.push(titulo.trim());
     }
     if (prioridade !== undefined) {
-        if (!(PRIORIDADES as readonly string[]).includes(prioridade)) {
+        if (!PRIORIDADES.includes(prioridade)) {
             res.status(400).json({ erro: "Prioridade inválida." });
             return;
         }
@@ -157,7 +156,7 @@ app.patch("/api/tarefas/:id", exigirLogin, async (req, res) => {
         valores.push(prioridade);
     }
     if (status !== undefined) {
-        if (!(STATUS as readonly string[]).includes(status)) {
+        if (!STATUS.includes(status as Status)) {
             res.status(400).json({ erro: "Status inválido." });
             return;
         }
@@ -184,6 +183,26 @@ app.patch("/api/tarefas/:id", exigirLogin, async (req, res) => {
         return;
     }
     res.json(await buscarUma(id, usuarioId));
+});
+
+// ATUALIZAR só o status (Aula 4): 204 quando dá certo, sem conteúdo
+app.patch("/api/tarefas/:id/status", exigirLogin, async (req, res) => {
+    const { status } = req.body as { status?: Status };
+    if (!status || !STATUS.includes(status)) {
+        res.status(400).json({ erro: "Status inválido." });
+        return;
+    }
+    const [resultado] = await banco.execute<ResultSetHeader>(
+        `UPDATE eventos
+            SET status = ?, encerrada_em = IF(? = 'encerrado', NOW(), NULL)
+          WHERE id = ? AND usuario_id = ?`,
+        [status, status, Number(req.params.id), usuarioDe(res)]
+    );
+    if (resultado.affectedRows === 0) {
+        res.status(404).json({ erro: `Evento #${req.params.id} não encontrado.` });
+        return;
+    }
+    res.status(204).end(); // 204: deu certo, e não há nada para devolver
 });
 
 // Remove um evento: com [id, outro usuário], nenhuma linha atende -> 404
@@ -241,5 +260,11 @@ app.post("/api/login", async (req, res) => {
     res.json({ token, nome: usuario.nome });
 });
 
+
+// ---------- ERROS NÃO PREVISTOS: sempre depois de todas as rotas ----------
+app.use((erro: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    console.error(erro); // o detalhe técnico fica só no terminal
+    res.status(500).json({ erro: "Algo deu errado no servidor. Tente de novo." });
+});
 
 app.listen(3000, () => console.log("API do EVENTOS FACUL em http://localhost:3000"));

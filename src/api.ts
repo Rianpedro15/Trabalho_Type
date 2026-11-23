@@ -1,6 +1,6 @@
 // TODAS AS CONVERSAS COM A API FICAM AQUI
 
-import type { Contagem, NovaTarefa, Sessao, Tarefa } from "./tipos";
+import type { Contagem, NovaTarefa, Sessao, Status, Tarefa } from "./tipos";
 const CHAVE_SESSAO = "taskflow:sessao";
 
 // ---------- A sessão: o "crachá" guardado no navegador ----------
@@ -84,6 +84,15 @@ export async function criarTarefa(dados: NovaTarefa): Promise<Tarefa> {
     const resposta = await enviar("POST", "/api/tarefas", dados);
     const bruto = (await resposta.json()) as Tarefa;
     return { ...bruto, criadaEm: new Date(bruto.criadaEm) };
+}
+
+// Concluir / reabrir: só o status muda (204, sem conteúdo)
+export async function alterarStatus(id: number, status: Status): Promise<void> {
+    await enviar("PATCH", `/api/tarefas/${id}/status`, { status });
+}
+
+export async function removerTarefa(id: number): Promise<void> {
+    await enviar("DELETE", `/api/tarefas/${id}`);
 }
 
 // Favorita ou desfavorita um evento (o coração)
