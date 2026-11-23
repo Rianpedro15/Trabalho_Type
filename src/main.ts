@@ -1,7 +1,7 @@
 
 import { elemento, campo, selecao } from "./dom"; // importa os campos criados no DOM
 
-import { buscarEstatisticas, buscarTarefa, criarConta, criarTarefa, encerrarSessao, entrar, guardarSessao, listarTarefas, sessaoAtual } from "./api"; // conversa com a API (que busca no MySQL)
+import { alternarFavorito, buscarEstatisticas, buscarTarefa, criarConta, criarTarefa, encerrarSessao, entrar, guardarSessao, listarTarefas, sessaoAtual } from "./api"; // conversa com a API (que busca no MySQL)
 
 import type { Prioridade, Status, Tarefa } from "./tipos"; // importa o tipo da tarefa
 
@@ -44,7 +44,35 @@ function criarItem(tarefa: Tarefa): HTMLLIElement {
     });
 
     meta.append(etiqueta, ...tags);
-    item.append(titulo, meta);
+
+    // O coração: favorita e desfavorita (grava no banco)
+    const favorito = document.createElement("button");
+    favorito.type = "button";
+    favorito.className = "favorito";
+    favorito.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+    const marcar = (ligado: boolean): void => {
+        favorito.classList.toggle("favorito--ativo", ligado);
+        favorito.setAttribute("aria-pressed", String(ligado));
+        const texto = ligado ? "Remover dos favoritos" : "Favoritar evento";
+        favorito.setAttribute("aria-label", texto);
+        favorito.title = texto;
+    };
+    marcar(tarefa.favorito === true);
+    favorito.addEventListener("click", async () => {
+        const novo = tarefa.favorito !== true;
+        tarefa.favorito = novo;
+        marcar(novo); // muda na hora; se a API falhar, desfaz
+        try {
+            await alternarFavorito(tarefa.id, novo);
+        } catch (erro) {
+            tarefa.favorito = !novo;
+            marcar(!novo);
+            mostrarErro(erro);
+        }
+    });
+
+    item.append(titulo, meta, favorito);
 
     return item;
 }

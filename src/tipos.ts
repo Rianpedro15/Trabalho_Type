@@ -11,6 +11,7 @@ export interface Tarefa {
     prioridade: Prioridade;
     status: Status;
     tags: string[];
+    favorito?: boolean;          // NOVO: o coração
     dataEvento?: string | null;  // NOVO: "2026-10-22" ou null
     criadaEm: Date;
 }

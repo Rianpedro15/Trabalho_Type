@@ -22,7 +22,7 @@ type Prioridade = (typeof PRIORIDADES)[number];
 // do jeito do banco (criada_em) para o jeito do TypeScript (criadaEm).
 // Agora com as tags: uma subconsulta junta os nomes numa linha só (GROUP_CONCAT)
 const SELECT_EVENTOS = `
-    SELECT e.id, e.titulo, e.descricao, e.prioridade, e.status,
+    SELECT e.id, e.titulo, e.descricao, e.prioridade, e.status, e.favorito,
            DATE_FORMAT(e.data_evento, '%Y-%m-%d') AS dataEvento,
            e.criada_em AS criadaEm,
            (SELECT GROUP_CONCAT(g.nome ORDER BY g.nome SEPARATOR ',')
@@ -33,7 +33,7 @@ const SELECT_EVENTOS = `
 
 // O banco devolve as tags como "estudo,ts" (ou null): viram um array
 function paraTarefa(linha: RowDataPacket): RowDataPacket {
-    return { ...linha, tags: linha.tags ? String(linha.tags).split(",") : [] };
+    return { ...linha, favorito: Boolean(linha.favorito), tags: linha.tags ? String(linha.tags).split(",") : [] };
 }
 
 // Busca um evento de quem está logado: pode não existir (ou ser de outra pessoa)
@@ -132,10 +132,11 @@ app.post("/api/tarefas", exigirLogin, async (req, res) => {
 
 // Altera um evento: o AND usuario_id = ? impede mexer no evento de outra pessoa
 app.patch("/api/tarefas/:id", exigirLogin, async (req, res) => {
-    const { titulo, prioridade, status } = req.body as {
+    const { titulo, prioridade, status, favorito } = req.body as {
         titulo?: string;
         prioridade?: Prioridade;
         status?: Status;
+        favorito?: boolean;
     };
     const campos: string[] = [];
     const valores: (string | number)[] = [];
@@ -163,6 +164,10 @@ app.patch("/api/tarefas/:id", exigirLogin, async (req, res) => {
         campos.push("status = ?");
         valores.push(status);
         campos.push(status === "encerrado" ? "encerrada_em = NOW()" : "encerrada_em = NULL");
+    }
+    if (favorito !== undefined) {
+        campos.push("favorito = ?");
+        valores.push(favorito ? 1 : 0);
     }
     if (campos.length === 0) {
         res.status(400).json({ erro: "Nada para alterar." });

@@ -42,6 +42,8 @@ CREATE TABLE eventos (
   descricao     TEXT          NULL,
   prioridade    ENUM('curto_prazo', 'medio_prazo', 'longo_prazo') NOT NULL DEFAULT 'medio_prazo',
   status        ENUM('aberto', 'lotado', 'encerrado')             NOT NULL DEFAULT 'aberto',
+  favorito      TINYINT(1)    NOT NULL DEFAULT 0,   -- 1 = evento favoritado (coração)
+-- Banco já criado? Em vez de rodar o script de novo: ALTER TABLE eventos ADD COLUMN favorito TINYINT(1) NOT NULL DEFAULT 0 AFTER status;
   data_evento   DATE          NULL,
   criada_em     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   atualizada_em DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

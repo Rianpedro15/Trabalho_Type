@@ -86,6 +86,11 @@ export async function criarTarefa(dados: NovaTarefa): Promise<Tarefa> {
     return { ...bruto, criadaEm: new Date(bruto.criadaEm) };
 }
 
+// Favorita ou desfavorita um evento (o coração)
+export async function alternarFavorito(id: number, favorito: boolean): Promise<void> {
+    await enviar("PATCH", `/api/tarefas/${id}`, { favorito });
+}
+
 // NOVO (Aula 6): os números do painel, calculados pelo banco com GROUP BY
 export async function buscarEstatisticas(): Promise<Contagem> {
     const resposta = await enviar("GET", "/api/estatisticas");
